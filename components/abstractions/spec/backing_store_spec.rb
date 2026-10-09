@@ -162,6 +162,13 @@ RSpec.describe 'an in-memory backing store in a model' do
     expect(changed(user)).to eq(['business_phones'])
   end
 
+  it 'tracks a string property edited in place' do
+    user.name = +'Ann'
+    read(user)
+    user.name.replace('Bea')
+    expect(changed(user)).to eq(['name'])
+  end
+
   it 'tracks an item of a collection edited in place' do
     user.business_phones = [+'+1 234']
     read(user)

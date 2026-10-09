@@ -150,6 +150,16 @@ RSpec.describe 'a model with a backing store' do
     expect(user.phone).to eq('123')
   end
 
+  it 'keeps the edits made after writing a model and before producing the document' do
+    user.name = 'Bea'
+    writer = writers.get_serialization_writer('application/json')
+    writer.write_object_value(nil, user)
+    user.name = 'Cy'
+    user.phone = '999'
+    expect(JSON.parse(writer.get_serialized_content)).to eq({ 'name' => 'Bea' })
+    expect(write(user)).to eq({ 'name' => 'Cy', 'phone' => '999' })
+  end
+
   it 'writes every value set on a new model' do
     fresh = BackedJsonModels::User.new
     fresh.id = 'n1'

@@ -9,8 +9,9 @@ module MicrosoftKiotaAbstractions
   class InMemoryBackingStore
     include BackingStore
 
-    # changed: set after initialization completed; snapshot: a copy of a collection's items when it was set
-    Entry = Struct.new(:changed, :value, :snapshot)
+    # changed: set after initialization completed; snapshot: a copy of a mutable value when it was set;
+    # revision: bumped on every change, so a writer acknowledges only the changes it wrote
+    Entry = Struct.new(:changed, :value, :snapshot, :revision)
 
     attr_reader :initialization_completed
     attr_accessor :return_only_changed_values
@@ -20,6 +21,7 @@ module MicrosoftKiotaAbstractions
       @subscriptions = {}
       @member_subscriptions = {}
       @walking = {}
+      @revision = 0
       @initialization_completed = true
       @return_only_changed_values = false
     end
@@ -29,7 +31,7 @@ module MicrosoftKiotaAbstractions
       walk_once(:initialization) do
         @store.each_key do |key|
           backed_models(@store[key].value).each { |model| model.backing_store.initialization_completed = value }
-          ensure_collection_is_consistent(key)
+          ensure_value_is_consistent(key)
           @store[key].changed = !value
         end
       end
@@ -39,7 +41,7 @@ module MicrosoftKiotaAbstractions
       validate(key)
       return unless @store.key?(key)
 
-      ensure_collection_is_consistent(key)
+      ensure_value_is_consistent(key)
       entry = @store[key]
       entry.value if !@return_only_changed_values || entry.changed
     end
@@ -47,13 +49,13 @@ module MicrosoftKiotaAbstractions
     def set(key, value)
       validate(key)
       old_value = @store[key]&.value
-      @store[key] = Entry.new(@initialization_completed, value, snapshot_of(value))
+      @store[key] = Entry.new(@initialization_completed, value, snapshot_of(value), @revision += 1)
       follow_members(key, value)
       notify(key, old_value, value)
     end
 
     def enumerate
-      @store.each_key { |key| ensure_collection_is_consistent(key) } if @return_only_changed_values
+      @store.each_key { |key| ensure_value_is_consistent(key) } if @return_only_changed_values
       @store.select { |_, entry| !@return_only_changed_values || entry.changed }.map { |key, entry| [key, entry.value] }
     end
 
@@ -78,6 +80,20 @@ module MicrosoftKiotaAbstractions
       @store.clear
     end
 
+    # the revisions of the changed values, used by the serialization writer proxy
+    def pending_changes
+      @store.each_key { |key| ensure_value_is_consistent(key) }
+      @store.select { |_, entry| entry.changed }.transform_values(&:revision)
+    end
+
+    # marks clean the values still at the revision that was written
+    def acknowledge_changes(pending)
+      pending.each do |key, revision|
+        entry = @store[key]
+        entry.changed = false if entry && entry.revision == revision
+      end
+    end
+
     private
 
     def validate(key)
@@ -92,6 +108,7 @@ module MicrosoftKiotaAbstractions
       case value
       when Array then value.map { |item| snapshot_item(item) }
       when Hash then value.transform_values { |item| snapshot_item(item) }
+      when String then value.dup unless value.frozen?
       end
     end
 
@@ -118,6 +135,7 @@ module MicrosoftKiotaAbstractions
       return if entry.nil?
 
       entry.changed = true if @initialization_completed
+      entry.revision = @revision += 1
       notify(key, entry.value, entry.value)
     end
 
@@ -137,8 +155,8 @@ module MicrosoftKiotaAbstractions
       end
     end
 
-    # a collection changed in place since it was set, or holding a changed model, is marked as changed
-    def ensure_collection_is_consistent(key)
+    # a value changed in place since it was set, or holding a changed model, is marked as changed
+    def ensure_value_is_consistent(key)
       entry = @store[key]
       walk_once(:consistency) do
         backed_models(entry.value).each { |model| model.backing_store.enumerate.map(&:first).each { |k| model.backing_store.get(k) } }
