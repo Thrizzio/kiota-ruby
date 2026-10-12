@@ -7,6 +7,7 @@ ruby '>= 3.3.0'
 gem 'microsoft_kiota_abstractions', path: 'components/abstractions'
 gem 'microsoft_kiota_authentication_oauth', path: 'components/authentication/oauth'
 gem 'microsoft_kiota_faraday', path: 'components/http'
+gem 'microsoft_kiota_serialization_form', path: 'components/serialization/form'
 gem 'microsoft_kiota_serialization_json', path: 'components/serialization/json'
 
 gem 'rake', '~> 13.0'
