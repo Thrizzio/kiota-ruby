@@ -15,6 +15,7 @@ Ruby 3.3 or newer is required.
 | [microsoft_kiota_abstractions](components/abstractions/) | Core abstractions for Kiota-generated clients | [![Gem Version](https://badge.fury.io/rb/microsoft_kiota_abstractions.svg)](https://rubygems.org/gems/microsoft_kiota_abstractions) |
 | [microsoft_kiota_serialization_json](components/serialization/json/) | JSON serialization implementation | [![Gem Version](https://badge.fury.io/rb/microsoft_kiota_serialization_json.svg)](https://rubygems.org/gems/microsoft_kiota_serialization_json) |
 | [microsoft_kiota_serialization_form](components/serialization/form/) | Form serialization implementation | [![Gem Version](https://badge.fury.io/rb/microsoft_kiota_serialization_form.svg)](https://rubygems.org/gems/microsoft_kiota_serialization_form) |
+| [microsoft_kiota_serialization_text](components/serialization/text/) | Text serialization implementation | [![Gem Version](https://badge.fury.io/rb/microsoft_kiota_serialization_text.svg)](https://rubygems.org/gems/microsoft_kiota_serialization_text) |
 | [microsoft_kiota_faraday](components/http/) | HTTP client implementation with Faraday | [![Gem Version](https://badge.fury.io/rb/microsoft_kiota_faraday.svg)](https://rubygems.org/gems/microsoft_kiota_faraday) |
 | [microsoft_kiota_authentication_oauth](components/authentication/oauth/) | OAuth authentication provider | [![Gem Version](https://badge.fury.io/rb/microsoft_kiota_authentication_oauth.svg)](https://rubygems.org/gems/microsoft_kiota_authentication_oauth) |
 
@@ -26,6 +27,7 @@ Add the gems you need to your application's Gemfile:
 gem 'microsoft_kiota_abstractions'
 gem 'microsoft_kiota_serialization_json'
 gem 'microsoft_kiota_serialization_form'
+gem 'microsoft_kiota_serialization_text'
 gem 'microsoft_kiota_faraday'
 gem 'microsoft_kiota_authentication_oauth'
 ```
@@ -48,6 +50,7 @@ To run tests for a specific component:
 rake abstractions:spec
 rake serialization-json:spec
 rake serialization-form:spec
+rake serialization-text:spec
 rake http:spec
 rake authentication-oauth:spec
 ```
