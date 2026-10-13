@@ -1,0 +1,10 @@
+# frozen_string_literal: true
+
+require_relative 'microsoft_kiota_serialization_form/form_parse_node'
+require_relative 'microsoft_kiota_serialization_form/form_parse_node_factory'
+require_relative 'microsoft_kiota_serialization_form/form_serialization_writer'
+require_relative 'microsoft_kiota_serialization_form/form_serialization_writer_factory'
+require_relative 'microsoft_kiota_serialization_form/version'
+
+module MicrosoftKiotaSerializationForm
+end

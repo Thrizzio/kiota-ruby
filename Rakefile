@@ -3,6 +3,7 @@
 COMPONENTS = {
   'abstractions' => 'components/abstractions',
   'serialization-json' => 'components/serialization/json',
+  'serialization-form' => 'components/serialization/form',
   'http' => 'components/http',
   'authentication-oauth' => 'components/authentication/oauth'
 }.freeze
