@@ -22,7 +22,6 @@ module MicrosoftKiotaSerializationText
     def write_string_value(key, value)
       return if value.nil?
       raise StandardError, NO_STRUCTURED_DATA_MESSAGE unless key.nil? || key.empty?
-      return if value.empty?
       raise StandardError, VALUE_ALREADY_WRITTEN_MESSAGE unless @content.nil?
 
       @content = value

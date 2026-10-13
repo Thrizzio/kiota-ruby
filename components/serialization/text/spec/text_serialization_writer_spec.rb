@@ -157,6 +157,11 @@ RSpec.describe MicrosoftKiotaSerializationText::TextSerializationWriter do
     expect(writer.get_serialized_content).to eq('')
   end
 
+  it 'raises when a value follows an empty one' do
+    writer.write_string_value(nil, '')
+    expect { writer.write_string_value(nil, 'second') }.to raise_error(StandardError, /a value was already written/)
+  end
+
   it 'writes a string held in bytes as UTF-8' do
     writer.write_string_value(nil, 'café'.b)
     expect(writer.get_serialized_content).to eq('café')
