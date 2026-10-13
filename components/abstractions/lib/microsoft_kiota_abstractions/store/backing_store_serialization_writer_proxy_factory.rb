@@ -51,7 +51,7 @@ module MicrosoftKiotaAbstractions
 
         @filtering[store] = store.return_only_changed_values unless @filtering.key?(store)
         store.return_only_changed_values = true
-        record(store)
+        @written[store] = true
       end
 
       def start(value, writer)
@@ -67,18 +67,12 @@ module MicrosoftKiotaAbstractions
       end
 
       def finish
-        @written.each { |store, pending| pending ? store.acknowledge_changes(pending) : store.initialization_completed = true } unless @failed
+        @written.each_key { |store| store.initialization_completed = true } unless @failed
         @written.clear
         @failed = false
       end
 
       private
-
-      # remembers the changes about to be written: only those become clean once the document is produced
-      def record(store)
-        pending = store.pending_changes if store.respond_to?(:pending_changes)
-        @written[store] = pending && @written[store] ? @written[store].merge(pending) : pending
-      end
 
       def store_of(value)
         value.backing_store if value.is_a?(BackedModel)

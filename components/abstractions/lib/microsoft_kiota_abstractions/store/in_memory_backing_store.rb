@@ -9,9 +9,8 @@ module MicrosoftKiotaAbstractions
   class InMemoryBackingStore
     include BackingStore
 
-    # changed: set after initialization completed; snapshot: a copy of a mutable value when it was set;
-    # revision: bumped on every change, so a writer acknowledges only the changes it wrote
-    Entry = Struct.new(:changed, :value, :snapshot, :revision)
+    # changed: set after initialization completed; snapshot: a copy of a mutable value when it was set
+    Entry = Struct.new(:changed, :value, :snapshot)
 
     attr_reader :initialization_completed
     attr_accessor :return_only_changed_values
@@ -21,7 +20,6 @@ module MicrosoftKiotaAbstractions
       @subscriptions = {}
       @member_subscriptions = {}
       @walking = {}
-      @revision = 0
       @initialization_completed = true
       @return_only_changed_values = false
     end
@@ -49,7 +47,7 @@ module MicrosoftKiotaAbstractions
     def set(key, value)
       validate(key)
       old_value = @store[key]&.value
-      @store[key] = Entry.new(@initialization_completed, value, snapshot_of(value), @revision += 1)
+      @store[key] = Entry.new(@initialization_completed, value, snapshot_of(value))
       follow_members(key, value)
       notify(key, old_value, value)
     end
@@ -78,20 +76,6 @@ module MicrosoftKiotaAbstractions
     def clear
       @member_subscriptions.each_key.to_a.each { |key| follow_members(key, nil) }
       @store.clear
-    end
-
-    # the revisions of the changed values, used by the serialization writer proxy
-    def pending_changes
-      @store.each_key { |key| ensure_value_is_consistent(key) }
-      @store.select { |_, entry| entry.changed }.transform_values(&:revision)
-    end
-
-    # marks clean the values still at the revision that was written
-    def acknowledge_changes(pending)
-      pending.each do |key, revision|
-        entry = @store[key]
-        entry.changed = false if entry && entry.revision == revision
-      end
     end
 
     private
@@ -135,7 +119,6 @@ module MicrosoftKiotaAbstractions
       return if entry.nil?
 
       entry.changed = true if @initialization_completed
-      entry.revision = @revision += 1
       notify(key, entry.value, entry.value)
     end
 
