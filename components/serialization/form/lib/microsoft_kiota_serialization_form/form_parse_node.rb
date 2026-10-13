@@ -110,7 +110,7 @@ module MicrosoftKiotaSerializationForm
         deserializer = deserializers[key] || by_lower_name[key.downcase]
         value = decode(raw_values.join(','))
         if deserializer
-          deserializer.call(child_node(raw_values)) unless value.casecmp?('null')
+          deserializer.call(child_node(raw_values)) unless value == 'null'
         elsif additional_data
           additional_data[key] = value
         end
@@ -171,8 +171,8 @@ module MicrosoftKiotaSerializationForm
         next unless pair.include?('=')
 
         key, value = pair.split('=', 2)
-        key = decode(key.strip)
-        (fields[key.downcase] ||= [key, []])[1] << value.strip
+        key = decode(key)
+        (fields[key.downcase] ||= [key, []])[1] << value
       end
       fields
     end

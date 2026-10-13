@@ -181,6 +181,16 @@ RSpec.describe MicrosoftKiotaSerializationForm::FormParseNode, 'edge cases' do
     expect(tags.get_collection_of_primitive_values(String)).to eq(['Lee, Ann', 'Bob'])
   end
 
+  it 'skips only the exact null sentinel, as Python does, so a value like Null is kept' do
+    expect(node('officeLocation=Null').get_object_value(entity_factory).office_location).to eq('Null')
+    expect(node('officeLocation=null').get_object_value(entity_factory).office_location).to be_nil
+  end
+
+  it 'keeps literal spaces around keys and values, as the standard form decoder does' do
+    expect(node('officeLocation= padded ').get_child_node('officeLocation').get_string_value).to eq(' padded ')
+    expect(node(' key =1').get_child_node(' key ').get_number_value).to eq(1)
+  end
+
   it 'reads back an empty string the writer wrote' do
     writer = MicrosoftKiotaSerializationForm::FormSerializationWriter.new
     writer.write_string_value('note', '')
@@ -299,31 +309,33 @@ RSpec.describe MicrosoftKiotaSerializationForm::FormParseNode, 'edge cases' do
       expect(result.additional_data).to eq('accountEnabled' => 'false', 'count' => '0')
     end
   end
+end
 
-  describe 'hooks' do
-    it 'calls the hooks around the field assignment, even when it raises' do
-      calls = []
-      parse_node = node('id=1')
-      parse_node.on_before_assign_field_values = ->(item) { calls << [:before, item] }
-      parse_node.on_after_assign_field_values = ->(item) { calls << [:after, item] }
-      failing = Files::TestEntity.new
-      allow(failing).to receive(:get_field_deserializers).and_raise(StandardError, 'boom')
+RSpec.describe MicrosoftKiotaSerializationForm::FormParseNode, 'hooks' do
+  def node(raw) = described_class.new(raw)
 
-      expect { parse_node.get_object_value(->(_node) { failing }) }.to raise_error(StandardError, 'boom')
-      expect(calls).to eq([[:before, failing], [:after, failing]])
-    end
+  it 'calls the hooks around the field assignment, even when it raises' do
+    calls = []
+    parse_node = node('id=1')
+    parse_node.on_before_assign_field_values = ->(item) { calls << [:before, item] }
+    parse_node.on_after_assign_field_values = ->(item) { calls << [:after, item] }
+    failing = Files::TestEntity.new
+    allow(failing).to receive(:get_field_deserializers).and_raise(StandardError, 'boom')
 
-    it 'gives the field nodes the same hooks' do
-      seen = nil
-      before = ->(_item) {}
-      parse_node = node('name=value')
-      parse_node.on_before_assign_field_values = before
-      item = Files::TestEntity.new
-      allow(item).to receive(:get_field_deserializers)
-        .and_return('name' => ->(field) { seen = field.on_before_assign_field_values })
+    expect { parse_node.get_object_value(->(_node) { failing }) }.to raise_error(StandardError, 'boom')
+    expect(calls).to eq([[:before, failing], [:after, failing]])
+  end
 
-      parse_node.get_object_value(->(_node) { item })
-      expect(seen).to be(before)
-    end
+  it 'gives the field nodes the same hooks' do
+    seen = nil
+    before = ->(_item) {}
+    parse_node = node('name=value')
+    parse_node.on_before_assign_field_values = before
+    item = Files::TestEntity.new
+    allow(item).to receive(:get_field_deserializers)
+      .and_return('name' => ->(field) { seen = field.on_before_assign_field_values })
+
+    parse_node.get_object_value(->(_node) { item })
+    expect(seen).to be(before)
   end
 end
