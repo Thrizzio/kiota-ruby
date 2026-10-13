@@ -48,7 +48,10 @@ module MicrosoftKiotaSerializationForm
       @raw_items = raw_items
     end
 
-    def get_string_value = read(:string)
+    # an empty value is an empty string, as .NET reads it; only null is nil
+    def get_string_value
+      @value unless @value == 'null'
+    end
 
     def get_boolean_value = read(:boolean)
 

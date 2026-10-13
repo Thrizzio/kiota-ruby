@@ -181,6 +181,13 @@ RSpec.describe MicrosoftKiotaSerializationForm::FormParseNode, 'edge cases' do
     expect(tags.get_collection_of_primitive_values(String)).to eq(['Lee, Ann', 'Bob'])
   end
 
+  it 'reads back an empty string the writer wrote' do
+    writer = MicrosoftKiotaSerializationForm::FormSerializationWriter.new
+    writer.write_string_value('note', '')
+
+    expect(node(writer.get_serialized_content).get_child_node('note').get_string_value).to eq('')
+  end
+
   it 'reads back a single item that contains a comma' do
     writer = MicrosoftKiotaSerializationForm::FormSerializationWriter.new
     writer.write_collection_of_primitive_values('tags', ['Lee, Ann'])
@@ -215,7 +222,8 @@ RSpec.describe MicrosoftKiotaSerializationForm::FormParseNode, 'edge cases' do
 
   describe 'scalars' do
     it 'returns nil for an empty value or null' do
-      expect(node('').get_string_value).to be_nil
+      expect(node('null').get_string_value).to be_nil
+      expect(node('').get_number_value).to be_nil
       expect(node('null').get_number_value).to be_nil
       expect(node('null').get_enum_value(test_enum)).to be_nil
     end
