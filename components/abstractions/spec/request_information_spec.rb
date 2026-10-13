@@ -66,6 +66,12 @@ RSpec.describe MicrosoftKiotaAbstractions do
     expect(request_info.headers.get('Content-Type')).to eq(["multipart/form-data; boundary=#{body.boundary}"])
   end
 
+  it 'loads the multipart body it checks for when required on its own' do
+    file = File.expand_path('../lib/microsoft_kiota_abstractions/request_information', __dir__)
+    out = IO.popen([RbConfig.ruby, '-e', "require '#{file}'; print defined?(MicrosoftKiotaAbstractions::MultipartBody)"], &:read)
+    expect(out).to eq('constant')
+  end
+
   it 'leaves the content type of any other body alone' do
     writer = double('writer', write_object_value: nil, get_serialized_content: '{}')
     adapter = double('adapter', get_serialization_writer_factory: double('factory', get_serialization_writer: writer))

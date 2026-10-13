@@ -5,6 +5,7 @@ require 'time'
 require 'uri'
 require 'stduritemplate'
 require_relative 'http_method'
+require_relative 'multipart_body'
 require_relative 'request_headers'
 
 module MicrosoftKiotaAbstractions
