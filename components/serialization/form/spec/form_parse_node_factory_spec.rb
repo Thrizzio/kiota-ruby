@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'spec_helper'
+require_relative 'files/files'
 
 RSpec.describe MicrosoftKiotaSerializationForm::FormParseNodeFactory do
   subject(:factory) { described_class.new }
@@ -23,9 +24,19 @@ RSpec.describe MicrosoftKiotaSerializationForm::FormParseNodeFactory do
       .to raise_error(ArgumentError, "expected a #{form_content_type} content type")
   end
 
-  it 'raises on an empty form' do
-    expect { factory.get_parse_node(form_content_type, '') }
+  it 'raises without content' do
+    expect { factory.get_parse_node(form_content_type, nil) }
       .to raise_error(ArgumentError, 'content cannot be undefined or empty')
+  end
+
+  it 'reads an empty form, as an empty model is written, like .NET' do
+    model = Files::TestEntity.new
+    writer = MicrosoftKiotaSerializationForm::FormSerializationWriter.new
+    writer.write_object_value(nil, model)
+    result = factory.get_parse_node(form_content_type, writer.get_serialized_content)
+                    .get_object_value(->(node) { Files::TestEntity.create_from_discriminator_value(node) })
+
+    expect(result.additional_data).to eq({})
   end
 
   it 'gets the valid content type' do

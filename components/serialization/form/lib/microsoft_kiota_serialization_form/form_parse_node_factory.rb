@@ -14,7 +14,7 @@ module MicrosoftKiotaSerializationForm
       valid = get_valid_content_type
       raise ArgumentError, 'content type cannot be undefined or empty' if content_type.nil? || content_type.empty?
       raise ArgumentError, "expected a #{valid} content type" unless content_type.casecmp?(valid)
-      raise ArgumentError, 'content cannot be undefined or empty' if content.nil? || content.empty?
+      raise ArgumentError, 'content cannot be undefined or empty' if content.nil?
 
       FormParseNode.new(content)
     end
