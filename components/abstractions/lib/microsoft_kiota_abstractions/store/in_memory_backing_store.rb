@@ -47,6 +47,7 @@ module MicrosoftKiotaAbstractions
     def set(key, value)
       validate(key)
       old_value = @store[key]&.value
+      mark_assigned(value) if @initialization_completed
       @store[key] = Entry.new(@initialization_completed, value, snapshot_of(value))
       follow_members(key, value)
       notify(key, old_value, value)
@@ -78,7 +79,23 @@ module MicrosoftKiotaAbstractions
       @store.clear
     end
 
+    protected
+
+    def mark_all_changed
+      walk_once(:marking) do
+        @store.each_value do |entry|
+          entry.changed = true
+          mark_assigned(entry.value)
+        end
+      end
+    end
+
     private
+
+    # a model assigned after initialization is written in full, as .NET does for the items of a collection
+    def mark_assigned(value)
+      backed_models(value).each { |model| model.backing_store.mark_all_changed if model.backing_store.is_a?(InMemoryBackingStore) }
+    end
 
     def validate(key)
       raise ArgumentError, 'key cannot be nil or empty' if key.nil? || key.empty?

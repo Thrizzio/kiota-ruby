@@ -78,7 +78,19 @@ RSpec.describe 'a model with a backing store' do
     colleague = user.manager
     colleague.name = 'Chief'
     user.colleagues = [colleague, colleague]
-    expect(write(user)['colleagues']).to eq([{ 'name' => 'Chief' }, { 'name' => 'Chief' }])
+    expect(write(user)['colleagues']).to eq([{ 'id' => 'm1', 'name' => 'Chief' }] * 2)
+  end
+
+  it 'writes a model read elsewhere and assigned to a property in full, with its nested models' do
+    user.manager = read('{"id":"m2","name":"Other","manager":{"id":"m3","name":"Top"}}')
+    expect(write(user)).to eq({ 'manager' => { 'id' => 'm2', 'name' => 'Other', 'manager' => { 'id' => 'm3', 'name' => 'Top' } } })
+  end
+
+  it 'writes an edit made to a model after assigning it' do
+    other = read('{"id":"m2","name":"Other"}')
+    user.colleagues = [other]
+    other.name = 'Edited'
+    expect(write(user)).to eq({ 'colleagues' => [{ 'id' => 'm2', 'name' => 'Edited' }] })
   end
 
   it 'keeps the changes, and reads every value again, when writing fails' do
