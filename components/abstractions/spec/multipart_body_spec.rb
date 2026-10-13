@@ -171,6 +171,11 @@ RSpec.describe MicrosoftKiotaAbstractions::MultipartBody, 'defensive checks' do
       .to raise_error(ArgumentError, 'Part value cannot be null')
   end
 
+  it 'rejects a content type with a line break, which would add headers to the part' do
+    expect { body.add_or_replace_part('file', "text/plain\r\nX-Injected: 1", 'data') }
+      .to raise_error(ArgumentError, 'Content type cannot contain line breaks')
+  end
+
   it 'rejects an empty part name or content type' do
     expect { body.add_or_replace_part('', 'text/plain', 'Hello') }.to raise_error(ArgumentError, 'Part name cannot be null')
     expect { body.add_or_replace_part('text', '', 'Hello') }.to raise_error(ArgumentError, 'Content type cannot be null')

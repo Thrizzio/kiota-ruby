@@ -21,6 +21,7 @@ module MicrosoftKiotaAbstractions
     def add_or_replace_part(part_name, content_type, part_value, filename = nil)
       raise ArgumentError, 'Part name cannot be null' if blank?(part_name)
       raise ArgumentError, 'Content type cannot be null' if blank?(content_type)
+      raise ArgumentError, 'Content type cannot contain line breaks' if content_type.to_s.match?(/[\r\n]/)
       raise ArgumentError, 'Part value cannot be null' if part_value.nil?
 
       @parts[normalize(part_name)] = Part.new(part_name, content_type, part_value, filename)

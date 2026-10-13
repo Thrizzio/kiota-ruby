@@ -56,6 +56,16 @@ RSpec.describe MicrosoftKiotaAbstractions do
     expect(writer).to have_received(:write_object_value).with(nil, body)
   end
 
+  it 'replaces a content type set beforehand with one carrying the boundary' do
+    writer = double('writer', write_object_value: nil, get_serialized_content: 'content')
+    adapter = double('adapter', get_serialization_writer_factory: double('factory', get_serialization_writer: writer))
+    body = MicrosoftKiotaAbstractions::MultipartBody.new
+    request_info = MicrosoftKiotaAbstractions::RequestInformation.new
+    request_info.headers.add('Content-Type', 'multipart/form-data')
+    request_info.set_content_from_parsable(adapter, 'multipart/form-data', body)
+    expect(request_info.headers.get('Content-Type')).to eq(["multipart/form-data; boundary=#{body.boundary}"])
+  end
+
   it 'leaves the content type of any other body alone' do
     writer = double('writer', write_object_value: nil, get_serialized_content: '{}')
     adapter = double('adapter', get_serialization_writer_factory: double('factory', get_serialization_writer: writer))

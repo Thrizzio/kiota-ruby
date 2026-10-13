@@ -117,6 +117,7 @@ module MicrosoftKiotaAbstractions
       if values.is_a?(MultipartBody)
         content_type = "#{content_type}; boundary=#{values.boundary}"
         values.request_adapter = request_adapter
+        @headers.remove(@@content_type_header)
       end
       @headers.try_add(@@content_type_header, content_type)
       if !values.nil? && values.is_a?(Array)
