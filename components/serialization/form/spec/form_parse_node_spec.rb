@@ -242,6 +242,15 @@ RSpec.describe MicrosoftKiotaSerializationForm::FormParseNode, 'edge cases' do
       expect([node('TRUE').get_boolean_value, node('false').get_boolean_value]).to eq([true, false])
     end
 
+    it 'reads a date, time or date time only in its own shape, as the Go form node does' do
+      expect([node('2017-09-04').get_date_value, node('2017-09-04').get_date_time_value, node('2017-09-04').get_time_value])
+        .to eq([Date.new(2017, 9, 4), nil, nil])
+      expect([node('2017-07-29T03:07:25Z').get_date_value, node('2017-07-29T03:07:25Z').get_time_value]).to eq([nil, nil])
+      expect(node('2017-07-29T03:07:25Z').get_date_time_value).to eq(DateTime.new(2017, 7, 29, 3, 7, 25))
+      expect([node('08:00:00').get_date_value, node('08:00:00').get_date_time_value]).to eq([nil, nil])
+      expect(node('08:00:00.0000000').get_time_value.strftime('%H:%M:%S')).to eq('08:00:00')
+    end
+
     it 'keeps a stray percent sign' do
       expect(node('100%+sure').get_string_value).to eq('100% sure')
     end

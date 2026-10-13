@@ -12,15 +12,20 @@ module MicrosoftKiotaSerializationForm
 
     attr_accessor :on_before_assign_field_values, :on_after_assign_field_values
 
+    # temporal readers take only their own shape, as in Go, so a union picks the right member
+    DATE = /\A\d{4}-\d{2}-\d{2}\z/
+    TIME = /\A\d{2}:\d{2}(:\d{2}(\.\d+)?)?\z/
+    DATE_TIME = /\A\d{4}-\d{2}-\d{2}[Tt ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?([Zz]|[+-]\d{2}(:?\d{2})?)?\z/
+
     READERS = {
       string: ->(value) { value },
       boolean: ->(value) { { 'true' => true, 'false' => false }[value.downcase] },
       number: ->(value) { Integer(value, 10) },
       float: ->(value) { Float(value) },
       guid: ->(value) { UUIDTools::UUID.parse(value) },
-      date: ->(value) { Date.parse(value) },
-      time: ->(value) { Time.parse(value) },
-      date_time: ->(value) { DateTime.parse(value) },
+      date: ->(value) { Date.parse(value) if DATE.match?(value) },
+      time: ->(value) { Time.parse(value) if TIME.match?(value) },
+      date_time: ->(value) { DateTime.parse(value) if DATE_TIME.match?(value) },
       duration: ->(value) { MicrosoftKiotaAbstractions::ISODuration.new(value) },
       byte_array: ->(value) { value.unpack1('m0') }
     }.freeze
