@@ -42,6 +42,7 @@ module MicrosoftKiotaSerializationForm
 
     def initialize(raw_value, raw_items = nil)
       raw_value = raw_value.to_s.b
+      @raw_value = raw_value
       @value = decode(raw_value)
       @fields = parse_fields(raw_value)
       @raw_items = raw_items
@@ -73,7 +74,7 @@ module MicrosoftKiotaSerializationForm
       kind = PRIMITIVE_TYPES[type]
       raise StandardError, "Encountered an unknown type during deserialization #{type}" if kind.nil?
 
-      items.map { |item| read(kind, item) }
+      primitive_items.map { |item| read(kind, item) }
     end
 
     def get_collection_of_object_values(_factory)
@@ -149,6 +150,11 @@ module MicrosoftKiotaSerializationForm
       return @raw_items.map { |raw| decode(raw) } if @raw_items && @raw_items.size > 1
 
       @value.split(',')
+    end
+
+    # only a comma sent as is separates primitive items; the writer encodes one inside an item
+    def primitive_items
+      (@raw_items || [@raw_value]).flat_map { |raw| raw.split(',') }.map { |raw| decode(raw) }
     end
 
     def parse_fields(raw)

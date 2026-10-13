@@ -181,6 +181,15 @@ RSpec.describe MicrosoftKiotaSerializationForm::FormParseNode, 'edge cases' do
     expect(tags.get_collection_of_primitive_values(String)).to eq(['Lee, Ann', 'Bob'])
   end
 
+  it 'reads back a single item that contains a comma' do
+    writer = MicrosoftKiotaSerializationForm::FormSerializationWriter.new
+    writer.write_collection_of_primitive_values('tags', ['Lee, Ann'])
+    tags = node(writer.get_serialized_content).get_child_node('tags')
+
+    expect(tags.get_collection_of_primitive_values(String)).to eq(['Lee, Ann'])
+    expect(node('tags=a,b').get_child_node('tags').get_collection_of_primitive_values(String)).to eq(%w[a b])
+  end
+
   it 'replaces invalid UTF-8 even when the body is tagged as UTF-8' do
     body = (+"name=caf\xE9").force_encoding(Encoding::UTF_8)
 
