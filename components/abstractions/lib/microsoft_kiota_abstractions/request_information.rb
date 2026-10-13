@@ -116,7 +116,7 @@ module MicrosoftKiotaAbstractions
     def set_content_from_parsable(request_adapter, content_type, values)
       writer = request_adapter.get_serialization_writer_factory.get_serialization_writer(content_type)
       if values.is_a?(MultipartBody)
-        content_type = "#{content_type}; boundary=#{values.boundary}"
+        content_type = "#{content_type.gsub(/;\s*boundary=[^;]*/i, '')}; boundary=#{values.boundary}"
         values.request_adapter = request_adapter
         @headers.remove(@@content_type_header)
       end
