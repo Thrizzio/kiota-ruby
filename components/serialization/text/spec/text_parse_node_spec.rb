@@ -140,6 +140,12 @@ RSpec.describe MicrosoftKiotaSerializationText::TextParseNode do
       expect(described_class.new("U2Ftd2Vs\nIGlzIHRoZSBiZXN0").get_byte_array_value).to eq('Samwel is the best')
     end
 
+    it 'returns nil for text that is not a guid, date, time, date time or duration, as .NET and the form gem do' do
+      parse_node = described_class.new('not a value')
+      readers = %i[get_guid_value get_date_value get_time_value get_date_time_value get_duration_value]
+      readers.each { |reader| expect(parse_node.public_send(reader)).to be_nil, reader.to_s }
+    end
+
     it 'returns nil for text that is not a number' do
       expect(described_class.new('twelve').get_number_value).to be_nil
       expect(described_class.new('12.5').get_number_value).to be_nil

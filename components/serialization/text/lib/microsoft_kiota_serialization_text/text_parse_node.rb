@@ -37,28 +37,23 @@ module MicrosoftKiotaSerializationText
     end
 
     def get_guid_value
-      text = scalar_text
-      UUIDTools::UUID.parse(text) if text
+      parsed { |text| UUIDTools::UUID.parse(text) }
     end
 
     def get_date_value
-      text = scalar_text
-      Date.parse(text) if text
+      parsed { |text| Date.parse(text) }
     end
 
     def get_time_value
-      text = scalar_text
-      Time.parse(text) if text
+      parsed { |text| Time.parse(text) }
     end
 
     def get_date_time_value
-      text = scalar_text
-      DateTime.parse(text) if text
+      parsed { |text| DateTime.parse(text) }
     end
 
     def get_duration_value
-      text = scalar_text
-      MicrosoftKiotaAbstractions::ISODuration.new(text) if text
+      parsed { |text| MicrosoftKiotaAbstractions::ISODuration.new(text) }
     end
 
     def get_byte_array_value
@@ -91,6 +86,14 @@ module MicrosoftKiotaSerializationText
     end
 
     private
+
+    # text that does not parse reads as nil, as .NET's TryParse and the form gem do
+    def parsed
+      text = scalar_text
+      yield text if text
+    rescue StandardError
+      nil
+    end
 
     # typed values ignore surrounding whitespace, as .NET's TryParse does
     def scalar_text
