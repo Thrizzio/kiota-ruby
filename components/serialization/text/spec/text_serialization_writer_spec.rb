@@ -168,6 +168,11 @@ RSpec.describe MicrosoftKiotaSerializationText::TextSerializationWriter do
   end
 
   describe 'edge cases' do
+    it 'writes a zero duration as PT0S' do
+      writer.write_duration_value(nil, MicrosoftKiotaAbstractions::ISODuration.new('PT0S'))
+      expect(writer.get_serialized_content).to eq('PT0S')
+    end
+
     it 'writes a zero number' do
       writer.write_number_value(nil, 0)
       expect(writer.get_serialized_content).to eq('0')

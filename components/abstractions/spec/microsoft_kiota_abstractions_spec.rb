@@ -100,6 +100,12 @@ RSpec.describe MicrosoftKiotaAbstractions do
     expect(time3.string).to eq(MicrosoftKiotaAbstractions::ISODuration.new('P4Y2MT4H').string)
   end
 
+  it 'writes and builds a zero duration as PT0S' do
+    expect(MicrosoftKiotaAbstractions::ISODuration.new('PT0S').string).to eq('PT0S')
+    expect(MicrosoftKiotaAbstractions::ISODuration.new({ seconds: 0 }).string).to eq('PT0S')
+    expect((MicrosoftKiotaAbstractions::ISODuration.new('PT2H') - MicrosoftKiotaAbstractions::ISODuration.new('PT2H')).string).to eq('PT0S')
+  end
+
   it 'handles subtraction' do
     time1 = MicrosoftKiotaAbstractions::ISODuration.new('P4Y2MT2H')
     time2 = MicrosoftKiotaAbstractions::ISODuration.new({ years: 1, months: 1, hours: 2 })

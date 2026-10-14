@@ -49,7 +49,7 @@ module MicrosoftKiotaAbstractions
       end
       iso_str = iso_str.strip
       iso_str = iso_str.chomp('T') if iso_str[-1].eql? 'T'
-      iso_str
+      iso_str == 'P' ? 'PT0S' : iso_str
     end
 
     def normalize
@@ -182,7 +182,7 @@ module MicrosoftKiotaAbstractions
       end
       iso_str = iso_str.strip
       iso_str = iso_str.chomp('T') if iso_str[-1].eql? 'T'
-      ISO8601::Duration.new(iso_str)
+      ISO8601::Duration.new(iso_str == 'P' ? 'PT0S' : iso_str)
     end
 
     def update_member_variables
