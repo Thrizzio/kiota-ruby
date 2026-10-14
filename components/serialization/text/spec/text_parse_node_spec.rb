@@ -132,6 +132,15 @@ RSpec.describe MicrosoftKiotaSerializationText::TextParseNode do
       readers.each { |reader| expect(parse_node.public_send(reader)).to be_nil, reader.to_s }
     end
 
+    it 'reads a date, time or date time only in its own shape, as the form gem does' do
+      date, date_time, time = %w[2017-09-04 2017-07-29T03:07:25Z 08:00:00].map { |text| described_class.new(text) }
+      expect([date.get_date_value, date.get_date_time_value, date.get_time_value]).to eq([Date.new(2017, 9, 4), nil, nil])
+      expect([date_time.get_date_value, date_time.get_time_value]).to eq([nil, nil])
+      expect(date_time.get_date_time_value).to eq(DateTime.new(2017, 7, 29, 3, 7, 25))
+      expect([time.get_date_value, time.get_date_time_value]).to eq([nil, nil])
+      expect(time.get_time_value.strftime('%H:%M:%S')).to eq('08:00:00')
+    end
+
     it 'reads a date time with a space separator, like the JSON gem' do
       expect(described_class.new('2024-01-02 03:04:05Z').get_date_time_value).to eq(DateTime.new(2024, 1, 2, 3, 4, 5))
     end

@@ -11,6 +11,11 @@ module MicrosoftKiotaSerializationText
 
     NO_STRUCTURED_DATA_MESSAGE = 'Text does not support structured data'
 
+    # temporal readers take only their own shape, as in the form gem, so a union picks the right member
+    DATE = /\A\d{4}-\d{2}-\d{2}\z/
+    TIME = /\A\d{2}:\d{2}(:\d{2}(\.\d+)?)?\z/
+    DATE_TIME = /\A\d{4}-\d{2}-\d{2}[Tt ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?([Zz]|[+-]\d{2}(:?\d{2})?)?\z/
+
     def initialize(text)
       @text = text
     end
@@ -41,15 +46,15 @@ module MicrosoftKiotaSerializationText
     end
 
     def get_date_value
-      parsed { |text| Date.parse(text) }
+      parsed { |text| Date.parse(text) if DATE.match?(text) }
     end
 
     def get_time_value
-      parsed { |text| Time.parse(text) }
+      parsed { |text| Time.parse(text) if TIME.match?(text) }
     end
 
     def get_date_time_value
-      parsed { |text| DateTime.parse(text) }
+      parsed { |text| DateTime.parse(text) if DATE_TIME.match?(text) }
     end
 
     def get_duration_value
