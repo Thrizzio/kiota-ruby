@@ -98,7 +98,7 @@ module MicrosoftKiotaAbstractions
     # read from the start each time the body is written, as .NET does for a seekable stream
     def rewind(stream)
       stream.rewind if stream.respond_to?(:rewind)
-    rescue Errno::ESPIPE
+    rescue SystemCallError
       nil
     end
 
