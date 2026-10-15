@@ -33,6 +33,13 @@ updates:
   cooldown:
     default-days: 7
 - package-ecosystem: bundler
+  directory: /components/serialization/text
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  cooldown:
+    default-days: 7
+- package-ecosystem: bundler
   directory: /components/http
   schedule:
     interval: daily

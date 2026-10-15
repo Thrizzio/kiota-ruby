@@ -1,0 +1,10 @@
+# frozen_string_literal: true
+
+require_relative 'microsoft_kiota_serialization_text/text_parse_node'
+require_relative 'microsoft_kiota_serialization_text/text_parse_node_factory'
+require_relative 'microsoft_kiota_serialization_text/text_serialization_writer'
+require_relative 'microsoft_kiota_serialization_text/text_serialization_writer_factory'
+require_relative 'microsoft_kiota_serialization_text/version'
+
+module MicrosoftKiotaSerializationText
+end
