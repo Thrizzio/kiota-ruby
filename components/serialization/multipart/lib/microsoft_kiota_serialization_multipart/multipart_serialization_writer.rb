@@ -6,8 +6,6 @@ module MicrosoftKiotaSerializationMultipart
   class MultipartSerializationWriter
     include MicrosoftKiotaAbstractions::SerializationWriter
 
-    attr_accessor :on_before_object_serialization, :on_after_object_serialization, :on_start_object_serialization
-
     def initialize
       @content = String.new(encoding: Encoding::BINARY)
     end
@@ -29,10 +27,6 @@ module MicrosoftKiotaSerializationMultipart
       raise ArgumentError, "Expected a MultipartBody instance but got #{value.class}" unless value.is_a?(MicrosoftKiotaAbstractions::MultipartBody)
 
       serialize_body(value)
-    end
-
-    def write_null_value(_key)
-      raise NotImplementedError
     end
 
     def get_serialized_content
