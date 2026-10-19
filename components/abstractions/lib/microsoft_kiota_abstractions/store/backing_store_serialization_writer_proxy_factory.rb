@@ -43,8 +43,11 @@ module MicrosoftKiotaAbstractions
       end
 
       def before(value)
-        # an exception already being handled around the write is not a failure of the write
-        @outer_error = $ERROR_INFO if @depth.zero?
+        if @depth.zero?
+          # an exception already being handled around the write is not a failure of the write
+          @outer_error = $ERROR_INFO
+          open_documents.push(self)
+        end
         @depth += 1
         store = store_of(value)
         return unless store
@@ -61,18 +64,31 @@ module MicrosoftKiotaAbstractions
       # runs even when writing the model raised: the store reads every value again, and keeps its changes
       def after(value)
         @depth -= 1
+        open_documents.pop if @depth.zero? && open_documents.last.equal?(self)
         @failed ||= !$ERROR_INFO.nil? && !$ERROR_INFO.equal?(@outer_error)
         store = store_of(value)
         store.return_only_changed_values = @filtering.delete(store) if store && @filtering.key?(store)
       end
 
+      # a document produced while another is written, such as a multipart part, leaves the models to that one
       def finish
-        @written.each_key { |store| store.initialization_completed = true } unless @failed
+        unless @failed
+          enclosing = open_documents.last
+          enclosing ? enclosing.adopt(@written) : @written.each_key { |store| store.initialization_completed = true }
+        end
         @written.clear
         @failed = false
       end
 
+      def adopt(written)
+        @written.merge!(written)
+      end
+
       private
+
+      def open_documents
+        Thread.current[:microsoft_kiota_open_documents] ||= []
+      end
 
       def store_of(value)
         value.backing_store if value.is_a?(BackedModel)
