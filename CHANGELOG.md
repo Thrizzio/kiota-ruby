@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.25.0](https://github.com/microsoft/kiota-ruby/compare/v0.24.1...v0.25.0) (2026-10-19)
+
+
+### Features
+
+* add a backing store that tracks the values changed since a model was read ([2b3782b](https://github.com/microsoft/kiota-ruby/commit/2b3782b915f7f204397a2fc6a29236c19feaa656))
+* add a backing store that tracks the values changed since a model was read ([32da27a](https://github.com/microsoft/kiota-ruby/commit/32da27af614ff020d10a58006db21512394164db))
+* add form serialization ([b60fd82](https://github.com/microsoft/kiota-ruby/commit/b60fd82ec3e342843fdc07121e7a84c30372c4bd))
+* add form serialization ([71fe737](https://github.com/microsoft/kiota-ruby/commit/71fe737ee97e1b31da1b8bc368dbc79798ce9e1f))
+* add multipart bodies and byte array values to the abstractions ([fcf3fc5](https://github.com/microsoft/kiota-ruby/commit/fcf3fc504336825d910d3afa4ecb4c4eda742bfa))
+* add multipart serialization ([0c4d56a](https://github.com/microsoft/kiota-ruby/commit/0c4d56a8eb4a755939cc4abd28c96aa757c11325))
+* add multipart serialization ([0d5e47a](https://github.com/microsoft/kiota-ruby/commit/0d5e47a32e495a1c447258e3b8805d2bd0d4d4b5))
+* add text serialization ([23d6604](https://github.com/microsoft/kiota-ruby/commit/23d6604965eebab453775063dd2e2e11f715bfad))
+* add text serialization ([6e0a18b](https://github.com/microsoft/kiota-ruby/commit/6e0a18b4b547d2f12a936a2b9a8d1f8727c8133a))
+
+
+### Bug Fixes
+
+* write a zero duration as PT0S ([b796bda](https://github.com/microsoft/kiota-ruby/commit/b796bdab8dcd2696e2a1e455744dc6d63b43ed9e))
+
 ## [0.24.1](https://github.com/microsoft/kiota-ruby/compare/v0.24.0...v0.24.1) (2026-10-07)
 
 
