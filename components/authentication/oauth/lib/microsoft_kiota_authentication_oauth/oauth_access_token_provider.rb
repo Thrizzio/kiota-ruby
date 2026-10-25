@@ -28,6 +28,7 @@ module MicrosoftKiotaAuthenticationOAuth
       end
 
       @cached_token = nil
+      @cached_tokens = {}
 
       @host_validator = if allowed_hosts.nil? || allowed_hosts.empty?
                           MicrosoftKiotaAbstractions::AllowedHostsValidator.new([])
@@ -38,7 +39,7 @@ module MicrosoftKiotaAuthenticationOAuth
       @scopes = if scopes.nil?
                   []
                 else
-                  scopes
+                  scopes.dup
                 end
     end
 
@@ -54,24 +55,31 @@ module MicrosoftKiotaAuthenticationOAuth
 
       raise StandardError, 'Only https is supported' if parsed_url.scheme != 'https'
 
-      @scopes << "#{parsed_url.scheme}://#{parsed_url.host}/.default" if @scopes.empty?
-      @token_request_context.initialize_scopes(@scopes)
+      effective_scopes = if @scopes.empty?
+                           ["#{parsed_url.scheme}://#{parsed_url.host}/.default"]
+                         else
+                           @scopes
+                         end
+      @token_request_context.initialize_scopes(effective_scopes)
       Fiber.new do
-        if @cached_token
-          token = OAuth2::AccessToken.from_hash(@token_request_context.oauth_provider, @cached_token)
-          token.token unless token.nil? || token.expired?
+        cached = @cached_tokens ? @cached_tokens[effective_scopes] : nil
+        if cached && (cached[:access_token] || cached['access_token'])
+          token = OAuth2::AccessToken.from_hash(@token_request_context.oauth_provider, cached)
+          next token.token unless token.nil? || token.expired?
 
-          if token.expired?
+          if token.expired? && !token.refresh_token.nil?
             token = token.refresh!
+            @cached_tokens[effective_scopes] = token.to_hash
             @cached_token = token.to_hash
-            token.token
+            next token.token
           end
         end
 
-        nil
         token = @token_request_context.get_token
 
         unless token.nil?
+          @cached_tokens ||= {}
+          @cached_tokens[effective_scopes] = token.to_hash
           @cached_token = token.to_hash
           token.token
         end
@@ -82,6 +90,11 @@ module MicrosoftKiotaAuthenticationOAuth
 
     protected
 
-    attr_writer :host_validator, :token_credential, :scopes, :cached_token
+    attr_writer :host_validator, :token_credential, :scopes
+
+    def cached_token=(token)
+      @cached_token = token
+      @cached_tokens&.clear
+    end
   end
 end
