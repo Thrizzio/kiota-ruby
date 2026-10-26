@@ -29,6 +29,7 @@ module MicrosoftKiotaAuthenticationOAuth
 
       @cached_token = nil
       @cached_tokens = {}
+      @last_auth_code = @token_request_context.auth_code if @token_request_context.respond_to?(:auth_code)
 
       @host_validator = if allowed_hosts.nil? || allowed_hosts.empty?
                           MicrosoftKiotaAbstractions::AllowedHostsValidator.new([])
@@ -62,27 +63,13 @@ module MicrosoftKiotaAuthenticationOAuth
                          end
       Fiber.new do
         @token_request_context.initialize_scopes(effective_scopes)
-        cached = @cached_tokens ? @cached_tokens[effective_scopes] : nil
-        if cached && (cached[:access_token] || cached['access_token'])
-          token = OAuth2::AccessToken.from_hash(@token_request_context.oauth_provider, cached)
-          next token.token unless token.nil? || token.expired?
+        invalidate_cache_if_auth_code_changed
 
-          if token.expired? && !token.refresh_token.nil?
-            token = token.refresh!
-            @cached_tokens[effective_scopes] = token.to_hash
-            @cached_token = token.to_hash
-            next token.token
-          end
-        end
+        cached_token = cached_token_for(effective_scopes)
+        next cached_token if cached_token
 
         token = @token_request_context.get_token
-
-        unless token.nil?
-          @cached_tokens ||= {}
-          @cached_tokens[effective_scopes] = token.to_hash
-          @cached_token = token.to_hash
-          token.token
-        end
+        cache_token(effective_scopes, token)
       end
     end
 
@@ -95,6 +82,39 @@ module MicrosoftKiotaAuthenticationOAuth
     def cached_token=(token)
       @cached_token = token
       @cached_tokens&.clear
+    end
+
+    private
+
+    def invalidate_cache_if_auth_code_changed
+      return unless @token_request_context.respond_to?(:auth_code) &&
+                    @token_request_context.auth_code != @last_auth_code
+
+      @cached_tokens&.clear
+      @cached_token = nil
+      @last_auth_code = @token_request_context.auth_code
+    end
+
+    def cached_token_for(effective_scopes)
+      cached = @cached_tokens ? @cached_tokens[effective_scopes] : nil
+      return nil unless cached && (cached[:access_token] || cached['access_token'])
+
+      token = OAuth2::AccessToken.from_hash(@token_request_context.oauth_provider, cached)
+      return token.token unless token.nil? || token.expired?
+      return nil unless token.expired? && !token.refresh_token.nil?
+
+      token = token.refresh!
+      cache_token(effective_scopes, token)
+      token.token
+    end
+
+    def cache_token(effective_scopes, token)
+      return nil if token.nil?
+
+      @cached_tokens ||= {}
+      @cached_tokens[effective_scopes] = token.to_hash
+      @cached_token = token.to_hash
+      token.token
     end
   end
 end

@@ -77,6 +77,22 @@ RSpec.describe MicrosoftKiotaAuthenticationOAuth::OAuthAccessTokenProvider do
       expect(multi_host_provider.scopes).to be_empty
     end
 
+    it 'derives distinct default scopes when multiple fibers are created before resuming' do
+      initialized_scopes = []
+      allow(context).to receive(:initialize_scopes) { |scopes| initialized_scopes << scopes }
+
+      fiber1 = multi_host_provider.get_authorization_token('https://one.example.com')
+      fiber2 = multi_host_provider.get_authorization_token('https://two.example.com')
+
+      fiber1.resume
+      fiber2.resume
+
+      expect(initialized_scopes).to eq([
+                                         ['https://one.example.com/.default'],
+                                         ['https://two.example.com/.default']
+                                       ])
+    end
+
     it 'does not mutate the caller-supplied scopes array' do
       caller_scopes = []
       scoped_provider = described_class.new(context, ['one.example.com'], caller_scopes)
@@ -126,6 +142,29 @@ RSpec.describe MicrosoftKiotaAuthenticationOAuth::OAuthAccessTokenProvider do
       expect(first_token).to eq('cached_valid_token')
       expect(second_token).to eq('cached_valid_token')
       expect(context).to have_received(:get_token).once
+    end
+
+    it 'invalidates cached tokens when the authorization code changes' do
+      auth_context = MicrosoftKiotaAuthenticationOAuth::AuthorizationCodeContext.new(
+        'tenant_id', 'client_id', 'client_secret', 'https://app.example.com/callback', 'code_a'
+      )
+      client = auth_context.oauth_provider
+      token_a = OAuth2::AccessToken.new(client, 'token_for_code_a')
+      token_b = OAuth2::AccessToken.new(client, 'token_for_code_b')
+
+      tokens = [token_a, token_b]
+      allow(auth_context).to receive(:get_token) { tokens.shift }
+
+      auth_provider = described_class.new(auth_context, ['api.example.com'], ['https://api.example.com/.default'])
+
+      first_token = auth_provider.get_authorization_token('https://api.example.com').resume
+      expect(first_token).to eq('token_for_code_a')
+
+      auth_context.auth_code = 'code_b'
+
+      second_token = auth_provider.get_authorization_token('https://api.example.com').resume
+      expect(second_token).to eq('token_for_code_b')
+      expect(auth_context).to have_received(:get_token).twice
     end
   end
 end
