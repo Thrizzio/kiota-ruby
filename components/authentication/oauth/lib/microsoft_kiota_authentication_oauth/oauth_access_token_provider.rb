@@ -60,8 +60,8 @@ module MicrosoftKiotaAuthenticationOAuth
                          else
                            @scopes
                          end
-      @token_request_context.initialize_scopes(effective_scopes)
       Fiber.new do
+        @token_request_context.initialize_scopes(effective_scopes)
         cached = @cached_tokens ? @cached_tokens[effective_scopes] : nil
         if cached && (cached[:access_token] || cached['access_token'])
           token = OAuth2::AccessToken.from_hash(@token_request_context.oauth_provider, cached)
